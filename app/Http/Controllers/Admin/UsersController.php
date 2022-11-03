@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Forms\UserForm;
+use Kris\LaravelFormBuilder\FormBuilder;
 
 class UsersController extends Controller
 {
@@ -15,7 +17,8 @@ class UsersController extends Controller
      */
     public function index()
     {
-        //
+        $users = User::paginate();
+        return view('admin.users.index', compact('users'));
     }
 
     /**
@@ -25,7 +28,11 @@ class UsersController extends Controller
      */
     public function create()
     {
-        //
+        $form = \FormBuilder::create(UserForm::class, [
+            'url' => route('admin.users.store'),
+            'method' => 'POST'
+        ]);
+        return view('admin.users.create', compact('form'));
     }
 
     /**
@@ -36,7 +43,21 @@ class UsersController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $form = \FormBuilder::create(UserForm::class);
+
+        if(!$form->isValid()){
+            return redirect()
+                ->back()
+                ->withErrors($form->getErrors())
+                ->withInput();
+        }
+
+        $data = $form->getFieldValues();
+        $password = str_random(6);
+        $data['password'] = $password;
+        User::create($data);
+
+        return redirect()->route('admin.users.index');
     }
 
     /**
